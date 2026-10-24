@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Orders</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div style="padding: 30px 40px;">
+        <h2>My Orders</h2>
+        <div id="ordersList"></div>
+    </div>
+
+    <script src="navbar.js"></script>
+    <script>
+        const userId = getLoggedInUserId();
+
+        async function loadOrders() {
+            const container = document.getElementById("ordersList");
+
+            if (!userId) {
+                container.innerHTML = "<p>Please log in to view your orders.</p>";
+                return;
+            }
+
+            const ordersResponse = await fetch(`http://localhost:8080/api/orders/${userId}`);
+            const orders = await ordersResponse.json();
+
+            if (orders.length === 0) {
+                container.innerHTML = "<p>You haven't placed any orders yet.</p>";
+                return;
+            }
+
+            container.innerHTML = "";
+
+            for (const order of orders) {
+                const itemsResponse = await fetch(`http://localhost:8080/api/orders/items/${order.id}`);
+                const items = await itemsResponse.json();
+
+                let itemsHTML = "";
+                for (const item of items) {
+                    const productResponse = await fetch(`http://localhost:8080/api/products/${item.productId}`);
+                    const product = await productResponse.json();
+                    itemsHTML += `<p>${product.name} × ${item.quantity} — ₹${item.price * item.quantity}</p>`;
+                }
+
+                const orderDiv = document.createElement("div");
+                orderDiv.className = "product-card";
+                orderDiv.style.marginBottom = "20px";
+                orderDiv.innerHTML = `
+                    <h3>Order #${order.id}</h3>
+                    <p>Status: ${order.status}</p>
+                    <p>Date: ${new Date(order.orderDate).toLocaleString()}</p>
+                    <hr>
+                    ${itemsHTML}
+                    <p class="price">Total: ₹${order.totalAmount}</p>
+                `;
+                container.appendChild(orderDiv);
+            }
+        }
+
+        loadOrders();
+    </script>
+</body>
+</html>

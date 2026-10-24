@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <script src="navbar.js"></script>
+
+    <main class="employee-page">
+
+        <div class="employee-header">
+            <div>
+                <p class="employee-label">ADMIN DASHBOARD</p>
+                <h1>View Store Data</h1>
+                <p class="employee-subtitle">Browse products and view all customer orders.</p>
+            </div>
+            <div class="employee-badge">🛡️ Admin</div>
+        </div>
+
+        <section class="existing-products" id="products">
+            <div class="products-heading">
+                <div>
+                    <p class="employee-label">INVENTORY</p>
+                    <h2>All Products</h2>
+                </div>
+                <span class="inventory-badge">Read-Only</span>
+            </div>
+            <div id="productList"></div>
+        </section>
+
+        <section class="existing-products" id="orders">
+            <div class="products-heading">
+                <div>
+                    <p class="employee-label">ALL ORDERS</p>
+                    <h2>Customer Orders</h2>
+                </div>
+                <span class="inventory-badge">Order List</span>
+            </div>
+            <div id="ordersList"></div>
+        </section>
+
+    </main>
+
+    <script>
+        const productImages = {
+            "Wireless Mouse": "https://images.pexels.com/photos/13870516/pexels-photo-13870516.jpeg",
+            "Bluetooth Headphones": "https://images.pexels.com/photos/33305814/pexels-photo-33305814.jpeg",
+            "Smartphone X200": "https://placehold.co/400x300/1a1a2e/ffffff?text=Smartphone+X200",
+            "4K Television 43\"": "https://images.pexels.com/photos/5202925/pexels-photo-5202925.jpeg",
+            "Bluetooth Speaker": "https://images.pexels.com/photos/13981274/pexels-photo-13981274.jpeg",
+            "Cotton T-Shirt": "https://images.pexels.com/photos/34156907/pexels-photo-34156907.jpeg",
+            "Men Formal Shirt": "https://images.pexels.com/photos/16675020/pexels-photo-16675020.jpeg",
+            "Women Kurti": "https://images.pexels.com/photos/11974169/pexels-photo-11974169.jpeg",
+            "Denim Jacket": "https://images.pexels.com/photos/1769859/pexels-photo-1769859.jpeg",
+            "Running Shoes": "https://images.pexels.com/photos/36429546/pexels-photo-36429546.jpeg",
+            "Non-Stick Pan Set": "https://media.istockphoto.com/id/2171707906/photo/frying-pans.jpg?b=1&s=612x612&w=0&k=20&c=cOtZbagnPL0RKY0ESpLDZuXAdHcsc1sIE5Gy-GZDbxQ=",
+            "Smartwatch Pro": "https://images.pexels.com/photos/30639091/pexels-photo-30639091.jpeg",
+            "LED Desk Lamp": "https://images.pexels.com/photos/974746/pexels-photo-974746.jpeg",
+            "Cotton Bedsheet Set": "https://images.pexels.com/photos/4290711/pexels-photo-4290711.jpeg",
+            "Yoga Mat": "https://images.pexels.com/photos/4498609/pexels-photo-4498609.jpeg",
+            "Dumbbell Set 10kg": "https://images.pexels.com/photos/6550849/pexels-photo-6550849.jpeg",
+            "Cricket Bat": "https://images.pexels.com/photos/35981347/pexels-photo-35981347.jpeg",
+            "Wireless Earbuds": "https://images.pexels.com/photos/16703782/pexels-photo-16703782.jpeg",
+            "Power Bank 20000mAh": "https://images.pexels.com/photos/14706040/pexels-photo-14706040.jpeg",
+            "Fitness Tracker Band": "https://images.pexels.com/photos/38484056/pexels-photo-38484056.png",
+            "Portable Mini Projector": "https://images.pexels.com/photos/31726719/pexels-photo-31726719.jpeg",
+            "Smart LED Bulb": "https://images.pexels.com/photos/11605252/pexels-photo-11605252.jpeg",
+            "Wireless Charging Pad": "https://images.pexels.com/photos/7742585/pexels-photo-7742585.jpeg",
+            "Action Camera 4K": "https://images.pexels.com/photos/13695990/pexels-photo-13695990.jpeg",
+            "Gaming Mouse": "https://images.pexels.com/photos/2115256/pexels-photo-2115256.jpeg",
+            "USB-C Hub": "https://images.pexels.com/photos/3921696/pexels-photo-3921696.jpeg",
+            "Mini Bluetooth Tracker": "https://images.pexels.com/photos/32977239/pexels-photo-32977239.jpeg"
+        };
+
+        function getProductImage(product) {
+            if (productImages[product.name]) {
+                return productImages[product.name];
+            }
+            if (product.imageUrl && (product.imageUrl.startsWith("http://") || product.imageUrl.startsWith("https://"))) {
+                return product.imageUrl;
+            }
+            return `https://placehold.co/400x300/1a1a2e/ffffff?text=${encodeURIComponent(product.name)}`;
+        }
+
+        const currentUser = JSON.parse(localStorage.getItem("loggedInUser"));
+        if (!currentUser || currentUser.role !== "ADMIN") {
+            alert("Access denied. Admins only.");
+            window.location.href = "index.html";
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch("http://localhost:8080/api/products");
+                const products = await response.json();
+                const container = document.getElementById("productList");
+                container.innerHTML = "";
+
+                products.forEach(product => {
+                    const div = document.createElement("div");
+                    div.className = "employee-product-card";
+                    div.innerHTML = `
+                        <div class="employee-product-content">
+                            <img src="${getProductImage(product)}" alt="${product.name}" class="employee-product-img"
+                                onerror="this.src='https://placehold.co/400x300/1a1a2e/ffffff?text=No+Image'">
+                            <div class="employee-product-details">
+                                <h3>${product.name}</h3>
+                                <p class="employee-product-description">${product.description}</p>
+                                <div class="employee-product-meta">
+                                    <span class="employee-price">₹${product.price}</span>
+                                    <span class="employee-stock">Stock: ${product.stock}</span>
+                                </div>
+                                <span class="employee-category">${product.category}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                console.error("Error loading products:", error);
+            }
+        }
+
+        async function loadOrders() {
+    try {
+        const response = await fetch("http://localhost:8080/api/orders/all");
+        const orders = await response.json();
+        const container = document.getElementById("ordersList");
+        container.innerHTML = "";
+
+        if (orders.length === 0) {
+            container.innerHTML = "<p>No orders placed yet.</p>";
+            return;
+        }
+
+        for (const order of orders) {
+            const itemsResponse = await fetch(`http://localhost:8080/api/orders/items/${order.id}`);
+            const items = await itemsResponse.json();
+
+            let itemsHTML = "";
+            for (const item of items) {
+                const productResponse = await fetch(`http://localhost:8080/api/products/${item.productId}`);
+                const product = await productResponse.json();
+                itemsHTML += `<p>• ${product.name} × ${item.quantity} — ₹${item.price * item.quantity}</p>`;
+            }
+
+            const div = document.createElement("div");
+            div.className = "employee-product-card";
+            div.innerHTML = `
+                <h3>Order #${order.id} — User ID: ${order.userId}</h3>
+                <p>Status: ${order.status}</p>
+                <p>Date: ${new Date(order.orderDate).toLocaleString()}</p>
+                <hr>
+                ${itemsHTML}
+                <p class="employee-price">Total: ₹${order.totalAmount}</p>
+            `;
+            container.appendChild(div);
+        }
+    } catch (error) {
+        console.error("Error loading orders:", error);
+    }
+}
+
+        loadProducts();
+        loadOrders();
+    </script>
+
+    <script src="footer.js"></script>
+</body>
+</html>

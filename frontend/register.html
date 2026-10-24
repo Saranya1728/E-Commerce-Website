@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <h2>Create Account</h2>
+            <p class="auth-subtitle">Join us and start shopping</p>
+
+            <input type="text" id="name" placeholder="Full Name">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="registerUser()" class="auth-btn">Register</button>
+            <p id="message" class="auth-message"></p>
+
+            <p class="auth-switch">Already have an account? <a href="login.html">Login</a></p>
+        </div>
+    </div>
+
+    <script src="navbar.js"></script>
+    <script>
+        function registerUser() {
+            const user = {
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            };
+
+            fetch("http://localhost:8080/api/users/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(user)
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("message").innerText = data;
+                if (data === "Registration successful!") {
+                    setTimeout(() => {
+                        window.location.href = "login.html";
+                    }, 1000);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("message").innerText = "Something went wrong.";
+            });
+        }
+    </script>
+    <script src="footer.js"></script>
+</body>
+</html>

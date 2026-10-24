@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Shop</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <h2>Big Deals, Every Day</h2>
+        <p>Shop electronics, fashion, and more — all in one place</p>
+    </div>
+
+    <!-- Category Filters -->
+    <div id="categoryFilters" class="filters"></div>
+
+    <!-- Products -->
+    <div id="productList"></div>
+
+    <script src="navbar.js"></script>
+
+    <script>
+
+        let allProducts = [];
+
+        /*
+         * PRODUCT IMAGES
+         * These images are connected to the product NAME
+         */
+        const productImages = {
+
+            "Wireless Mouse":
+                "https://images.pexels.com/photos/13870516/pexels-photo-13870516.jpeg",
+
+            "Bluetooth Headphones":
+                "https://images.pexels.com/photos/33305814/pexels-photo-33305814.jpeg",
+
+            "Cotton T-Shirt":
+                "https://images.pexels.com/photos/34156907/pexels-photo-34156907.jpeg",
+
+            "Smartphone X200":
+                "https://placehold.co/400x300/1a1a2e/ffffff?text=Smartphone+X200",
+
+            "Smartwatch Pro":
+                "https://images.pexels.com/photos/30639091/pexels-photo-30639091.jpeg",
+
+            "4K Television 43\"":
+                "https://images.pexels.com/photos/5202925/pexels-photo-5202925.jpeg",
+
+            "Bluetooth Speaker":
+                "https://images.pexels.com/photos/13981274/pexels-photo-13981274.jpeg",
+
+            "Men Formal Shirt":
+                "https://images.pexels.com/photos/16675020/pexels-photo-16675020.jpeg",
+
+            "Women Kurti":
+                "https://images.pexels.com/photos/11974169/pexels-photo-11974169.jpeg",
+
+            "Denim Jacket":
+                "https://images.pexels.com/photos/1769859/pexels-photo-1769859.jpeg",
+
+            "Running Shoes":
+                "https://images.pexels.com/photos/36429546/pexels-photo-36429546.jpeg",
+
+            "Non-Stick Pan Set":
+                "https://media.istockphoto.com/id/2171707906/photo/frying-pans.jpg?b=1&s=612x612&w=0&k=20&c=cOtZbagnPL0RKY0ESpLDZuXAdHcsc1sIE5Gy-GZDbxQ=",
+
+            "LED Desk Lamp":
+                "https://images.pexels.com/photos/974746/pexels-photo-974746.jpeg",
+
+            "Cotton Bedsheet Set":
+                "https://images.pexels.com/photos/4290711/pexels-photo-4290711.jpeg",
+
+            "Yoga Mat":
+                "https://images.pexels.com/photos/4498609/pexels-photo-4498609.jpeg",
+
+            "Dumbbell Set 10kg":
+                "https://images.pexels.com/photos/6550849/pexels-photo-6550849.jpeg",
+
+            "Cricket Bat":
+                "https://images.pexels.com/photos/35981347/pexels-photo-35981347.jpeg",
+
+            "Wireless Earbuds":
+                "https://images.pexels.com/photos/16703782/pexels-photo-16703782.jpeg",
+
+            "Power Bank 20000mAh":
+                "https://images.pexels.com/photos/14706040/pexels-photo-14706040.jpeg",
+
+            "Fitness Tracker Band":
+                "https://images.pexels.com/photos/38484056/pexels-photo-38484056.png",
+
+            "Portable Mini Projector":
+                "https://images.pexels.com/photos/31726719/pexels-photo-31726719.jpeg",
+
+            "Smart LED Bulb":
+                "https://images.pexels.com/photos/11605252/pexels-photo-11605252.jpeg",
+
+            "Wireless Charging Pad":
+                "https://images.pexels.com/photos/7742585/pexels-photo-7742585.jpeg",
+
+            "Action Camera 4K":
+                "https://images.pexels.com/photos/13695990/pexels-photo-13695990.jpeg",
+
+            "Gaming Mouse":
+                "https://images.pexels.com/photos/2115256/pexels-photo-2115256.jpeg",
+
+            "USB-C Hub":
+                "https://images.pexels.com/photos/3921696/pexels-photo-3921696.jpeg",
+
+            "Mini Bluetooth Tracker":
+                "https://images.pexels.com/photos/32977239/pexels-photo-32977239.jpeg",
+
+            "Puzzle toys":
+                "https://placehold.co/400x300/1a1a2e/ffffff?text=Puzzle+Toys"
+        };
+
+
+        /*
+         * GET PRODUCT IMAGE
+         */
+        function getProductImage(product) {
+
+            // 1. If imageUrl exists in database
+            if (product.imageUrl && product.imageUrl.trim() !== "") {
+
+                // If employee entered a complete URL
+                if (
+                    product.imageUrl.startsWith("http://") ||
+                    product.imageUrl.startsWith("https://")
+                ) {
+                    return product.imageUrl;
+                }
+            }
+
+            // 2. Use predefined image based on product name
+            if (productImages[product.name]) {
+                return productImages[product.name];
+            }
+
+            // 3. Default image if no image is found
+            return `https://placehold.co/400x300/1a1a2e/ffffff?text=${encodeURIComponent(product.name)}`;
+        }
+
+
+        /*
+         * LOAD PRODUCTS FROM SPRING BOOT
+         */
+        fetch("http://localhost:8080/api/products")
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error("Unable to load products");
+                }
+
+                return response.json();
+            })
+
+            .then(products => {
+
+                console.log("Products received:", products);
+
+                allProducts = products;
+
+                renderCategoryFilters(products);
+
+                renderProducts(products);
+            })
+
+            .catch(error => {
+
+                console.error("Error fetching products:", error);
+
+                document.getElementById("productList").innerHTML = `
+                    <p style="
+                        color:red;
+                        padding:30px;
+                        text-align:center;
+                        font-size:18px;
+                    ">
+                        Unable to load products.
+                    </p>
+                `;
+            });
+
+
+        /*
+         * CATEGORY FILTERS
+         */
+        function renderCategoryFilters(products) {
+
+            const categories = [
+                "All",
+                ...new Set(
+                    products
+                        .map(product => product.category)
+                        .filter(category => category)
+                )
+            ];
+
+            const container =
+                document.getElementById("categoryFilters");
+
+            container.innerHTML = categories.map(category => {
+
+                return `
+                    <button
+                        class="filter-btn"
+                        onclick="filterByCategory('${category}')">
+
+                        ${category}
+
+                    </button>
+                `;
+
+            }).join("");
+        }
+
+
+        /*
+         * FILTER PRODUCTS
+         */
+        function filterByCategory(category) {
+
+            if (category === "All") {
+
+                renderProducts(allProducts);
+
+            } else {
+
+                const filteredProducts =
+                    allProducts.filter(
+                        product => product.category === category
+                    );
+
+                renderProducts(filteredProducts);
+            }
+        }
+
+
+        /*
+         * DISPLAY PRODUCTS
+         */
+        function renderProducts(products) {
+
+            const container =
+                document.getElementById("productList");
+
+            container.innerHTML = "";
+
+            if (products.length === 0) {
+
+                container.innerHTML = `
+                    <p style="padding:40px;">
+                        No products available.
+                    </p>
+                `;
+
+                return;
+            }
+
+
+            products.forEach(product => {
+
+                const div =
+                    document.createElement("div");
+
+                div.className = "product-card";
+
+
+                div.innerHTML = `
+
+                    <img
+                        src="${getProductImage(product)}"
+                        alt="${product.name}"
+                        class="product-img"
+                        onerror="this.src='https://placehold.co/400x300/1a1a2e/ffffff?text=No+Image'"
+                    >
+
+                    <h3>
+                        ${product.name}
+                    </h3>
+
+                    <p>
+                        ${product.description}
+                    </p>
+
+                    <p class="price">
+                        ₹${product.price}
+                    </p>
+
+                    <button
+                        onclick="addToCart(${product.id})">
+
+                        Add to Cart
+
+                    </button>
+
+                `;
+
+                container.appendChild(div);
+
+            });
+        }
+
+
+        /*
+         * ADD TO CART
+         */
+        function addToCart(productId) {
+    const currentUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+    if (!currentUser) {
+        alert("Please log in first.");
+        window.location.href = "login.html";
+        return;
+    }
+
+    if (currentUser.role !== "CUSTOMER") {
+        alert("Only customer accounts can add items to cart.");
+        return;
+    }
+
+    fetch("http://localhost:8080/api/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, productId: productId, quantity: 1 })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("Added to cart!");
+    });
+}
+    </script>
+
+    <script src="footer.js"></script>
+
+</body>
+</html>
